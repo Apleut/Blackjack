@@ -118,9 +118,9 @@ def blackjack():
 
     time.sleep(1)
 
-    if dealervalue >= playervalue and dealervalue < 21:
+    if dealervalue >= playervalue and dealervalue <= 21:
         print(f"\n\nDealer has a higher value! You lose ${playerbet}.\n\n")
-    elif playervalue >= dealervalue and playervalue < 21:
+    elif playervalue >= dealervalue and playervalue <= 21:
         print(f"\n\nYou have a higher value! You win ${playerwinnings}.\n\n")
     elif dealervalue > 21 and playervalue <= 21:
         print(f"\n\nDealer busts! You win ${playerwinnings}.\n\n")
