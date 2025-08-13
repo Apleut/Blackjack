@@ -67,19 +67,19 @@ def game_over_banner():
 # Deck logic
 
 deck = [
-    "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 
-    "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 
-    "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 
-    "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10
+    "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K", 
+    "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K", 
+    "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K", 
+    "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"
 ]
 
 def reshuffle_deck():
     deck.clear()
     deck.extend([
-    "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 
-    "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 
-    "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 
-    "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10
+    "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K", 
+    "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K", 
+    "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K", 
+    "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"
     ])
 
 def draw_card():
@@ -154,24 +154,32 @@ def blackjack():
 
     def calculate_hand_value(hand1, hand2, hand3, hand4):
         hand_value = 0
+        aces = 0
 
-        def ace_check(card, hand_value):
+        def special_check(card, hand_value):
+            nonlocal aces
+            
             if card is None:
                 return hand_value
             else:
-                if card == "A" and hand_value >= 11:
-                    new_hand_value = hand_value + 1
-                elif card == "A" and hand_value < 11:
+                if card == "A":
                     new_hand_value = hand_value + 11
+                    aces += 1
+                elif card in ["J", "Q", "K"]:
+                    new_hand_value = hand_value + 10
                 else:
                     new_hand_value = hand_value + card
 
                 return new_hand_value
 
-        hand_value = ace_check(hand1, hand_value)
-        hand_value = ace_check(hand2, hand_value)
-        hand_value = ace_check(hand3, hand_value)
-        hand_value = ace_check(hand4, hand_value)
+        hand_value = special_check(hand1, hand_value)
+        hand_value = special_check(hand2, hand_value)
+        hand_value = special_check(hand3, hand_value)
+        hand_value = special_check(hand4, hand_value)
+
+        while hand_value > 21 and aces > 0:
+            hand_value -= 10
+            aces -= 1
 
         return hand_value
         
@@ -224,6 +232,8 @@ def blackjack():
     clear_screen()
     if dealerhandshown == "A":
         dealerknownvalue = 11
+    elif dealerhandshown in ["J", "Q", "K"]:
+        dealerknownvalue = 10
     else:
         dealerknownvalue = dealerhandshown
     print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}{Style.RESET_ALL}. Total value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ???{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealerknownvalue}{Style.RESET_ALL}")
