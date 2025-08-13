@@ -67,19 +67,19 @@ def game_over_banner():
 # Deck logic
 
 deck = [
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10
+    "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 
+    "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 
+    "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 
+    "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10
 ]
 
 def reshuffle_deck():
     deck.clear()
     deck.extend([
-        1,2,3,4,5,6,7,8,9,10,10,10,10,
-        1,2,3,4,5,6,7,8,9,10,10,10,10,
-        1,2,3,4,5,6,7,8,9,10,10,10,10,
-        1,2,3,4,5,6,7,8,9,10,10,10,10
+    "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 
+    "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 
+    "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 
+    "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10
     ])
 
 def draw_card():
@@ -107,31 +107,7 @@ def rules():
     print(f"The dealer will attempt to beat you by reaching a higher value (while still not going over {Fore.BLUE}21{Style.RESET_ALL}.)\nIf the dealer has a value closer to 21 at the end of the game, you lose.")
     input("\n\nPress ENTER to continue.")
 
-draw = "draw"
-reveal = "reveal"
-reshuffle = "reshuffle"
 
-def dealer_card_loop(type):
-    if type == "draw":
-        text = "draws a card"
-        duration = 5
-    elif type == "reveal":
-        text = "reveals their card"
-        duration = 5
-    elif type == "reshuffle":
-        text = "is reshuffling the cards"
-        duration = 10
-    for i in range(1, duration):
-
-        clear_screen()
-        print(f"{Style.DIM}The dealer {text}.{Style.RESET_ALL}")
-        time.sleep(0.3)
-        clear_screen()
-        print(f"{Style.DIM}The dealer {text}..{Style.RESET_ALL}")
-        time.sleep(0.3)
-        clear_screen()
-        print(f"{Style.DIM}The dealer {text}...{Style.RESET_ALL}")
-        time.sleep(0.3)
 
 def blackjack():
 
@@ -145,181 +121,221 @@ def blackjack():
     while novalidint is True:
         try:
             clear_screen()
-            playerbet = (input(f"{Style.RESET_ALL}How much would you like to bet for this round?: $"))
-
-            if playerbet == "ENABLE_CHEATS":
-                print(f"{Fore.BLUE}CHEATS ENABLED. TYPE 'OVERRIDE_[OUTCOME]' TO SET THE OUTCOME OF THE ROUND.")
-                action = input(f"ACTION: ")
-                if action == "OVERRIDE_WIN":
-                    dealervalue = 400
-                    print("DO NOT DRAW ANY CARDS THIS ROUND AND YOU WILL WIN.")
-                if action == "OVERRIDE_LOSE":
-                    playervalue = 400
-                    print("YOU WILL LOSE THIS ROUND.")
-                if action == "OVERRIDE_PUSH":
-                    playervalue = 400
-                    dealervalue = 400
-                    print("THE OUTCOME WILL BE A PUSH.")
-                else:
-                    print("INVALID COMMAND. PROCEDING WITH STANDARD GAME LOOP.")
-                time.sleep(3)
-
-                clear_screen()
-                playerbet = (input(f"{Style.RESET_ALL}How much would you like to bet for this round? (Type your actual bet this time.): $"))
-
-            playerbet = int(playerbet)
+            playerbet = int(input(f"{Style.RESET_ALL}How much would you like to bet for this round?: $"))
 
             if playerbet > playermoney:
                 clear_screen()
                 print(f"{Fore.RED}You tryna cheat me? You don't have that much money!{Style.RESET_ALL}")
-                time.sleep(3)
+                input("\n\nPress ENTER to continue.")
             elif playerbet < 50:
                 clear_screen()
                 print(f"{Fore.RED}You think this is a cheapskate casino? You need to bet at least $50.{Style.RESET_ALL}")
-                time.sleep(3)
+                input("\n\nPress ENTER to continue.")
             else:
                 novalidint = False
         except ValueError:
             clear_screen()
             print(f"{Fore.RED}That isn't a number. I need a valid number.{Style.RESET_ALL}")
-            time.sleep(3)
+            input("\n\nPress ENTER to continue.")
+
+    def validate_choice(choice):
+
+        if choice.lower() not in ["hit", "stand", "double down"]:
+            clear_screen()
+            print(f"{Fore.RED}That's not a valid choice.{Style.RESET_ALL}")
+            input("\n\nPress ENTER to continue.")
+            return False
+        else:
+            if choice.lower() == "double down" and playerbet * 2 > playermoney:
+                print(f"{Fore.RED}You don't have enough money for that. Try hitting instead.{Style.RESET_ALL}")
+                return False
+            else:
+                return True
+
+    def calculate_hand_value(hand1, hand2, hand3, hand4):
+        hand_value = 0
+
+        def ace_check(card, hand_value):
+            if card is None:
+                return hand_value
+            else:
+                if card == "A" and hand_value >= 11:
+                    new_hand_value = hand_value + 1
+                elif card == "A" and hand_value < 11:
+                    new_hand_value = hand_value + 11
+                else:
+                    new_hand_value = hand_value + card
+
+                return new_hand_value
+
+        hand_value = ace_check(hand1, hand_value)
+        hand_value = ace_check(hand2, hand_value)
+        hand_value = ace_check(hand3, hand_value)
+        hand_value = ace_check(hand4, hand_value)
+
+        return hand_value
+        
+
+    
+
+
+
 
 
     playerhand1 = draw_card()
     playerhand2 = draw_card()
-    playerhand3 = 0
-    playerhand4 = 0
-    playervalue = playerhand1 + playerhand2 + playervalue
+    playerhand3 = None
+    playerhand4 = None
+    playervalue = calculate_hand_value(playerhand1, playerhand2, playerhand3, playerhand4)
 
     dealerhandshown = draw_card()
     dealerhandhidden = draw_card()
-    dealervalue = dealerhandshown + dealerhandhidden + dealervalue
+    dealerhand3 = None
+    dealerhand4 = None
+    dealervalue = calculate_hand_value(dealerhandshown, dealerhandhidden, dealerhand3, dealerhand4)
+
+    draw = "draw"
+    reveal = "reveal"
+    reshuffle = "reshuffle"
+
+    def dealer_card_loop(type):
+        if type == "draw":
+            text = "draws a card"
+            duration = 5
+        elif type == "reveal":
+            text = "reveals their card"
+            duration = 5
+        elif type == "reshuffle":
+            text = "is reshuffling the cards"
+            duration = 10
+        for i in range(1, duration):
+
+            clear_screen()
+            print(f"{Style.DIM}The dealer {text}.{Style.RESET_ALL}")
+            time.sleep(0.3)
+            clear_screen()
+            print(f"{Style.DIM}The dealer {text}..{Style.RESET_ALL}")
+            time.sleep(0.3)
+            clear_screen()
+            print(f"{Style.DIM}The dealer {text}...{Style.RESET_ALL}")
+            time.sleep(0.3)
 
 
     clear_screen()
-    print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}{Style.RESET_ALL}. Total value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ???{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealerhandshown}{Style.RESET_ALL}\n")
+    if dealerhandshown == "A":
+        dealerknownvalue = 11
+    else:
+        dealerknownvalue = dealerhandshown
+    print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}{Style.RESET_ALL}. Total value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ???{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealerknownvalue}{Style.RESET_ALL}")
 
-    time.sleep(1)
+    input("\n\nPress ENTER to continue.")
 
-    novalidchoice = True
-    playerchoice = "NOT GIVEN"
-    
-    while novalidchoice is True:
-        
-        playerchoice = str(input("'Hit', 'Stand', or 'Double down'?: "))
+    # Choice logic
+    def choice():
 
-        if playerchoice.lower() != "hit" and playerchoice.lower() != "stand" and playerchoice.lower() != "double down":
+        nonlocal playerbet
+
+        validchoice = False
+
+        while validchoice is False:
+
             clear_screen()
-            print(f"{Fore.RED}\nThat isn't a valid choice kid. It's either hit, stand, or double down.\n\n{Style.RESET_ALL}")
-            time.sleep(1)
-        else:
-            novalidchoice = False
+            playerchoice = input(f"{Fore.YELLOW}Hit{Style.RESET_ALL}, {Fore.YELLOW}stand{Style.RESET_ALL}, or {Fore.YELLOW}double down{Style.RESET_ALL}?: ")
+            validchoice = validate_choice(playerchoice)
 
-        if playerchoice.lower() == "hit" or playerchoice.lower() == "double down":
-            if playerchoice.lower() == "double down":
-                if playerbet * 2 > playermoney:
-                    clear_screen()
-                    print(f"{Fore.RED}You tryna cheat me? You don't have that much money!{Style.RESET_ALL}")
-                    time.sleep(3)
-                    novalidchoice = True
-                else:
-                    playerbet = playerbet * 2
-                    novalidchoice = False
-            playerhand3 = draw_card()
-            playervalue = playervalue + playerhand3
+        if playerchoice.lower() == "hit":
+            card = draw_card()
+            # The boolean variable here is our continue flag. It tells the game to allow another choice afterwards.
+            return True, card
+        elif playerchoice.lower() == "double down":
+            card = draw_card()
+            playerbet = playerbet * 2
+            return False, card
+        else: # Standing
+            return False, None
+
+    # Choice round 1
+
+    if playervalue <= 20:
+
+        continue_flag, playerhand3 = choice()
+        if playerhand3:
+            playervalue = calculate_hand_value(playerhand1, playerhand2, playerhand3, playerhand4)
             clear_screen()
-            print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}, {playerhand3}{Style.RESET_ALL}. Total value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ???{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealerhandshown}{Style.RESET_ALL}\n\n")
+            print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}, {playerhand3}{Style.RESET_ALL}. Total value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ???{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealerknownvalue}{Style.RESET_ALL}")
+            input("\n\nPress ENTER to continue.")
 
-        while novalidchoice is True:
+        # Choice round 2, but only if the continue flag is True and playervalue is still under 21
 
-            if playerchoice.lower() != "double down" and playerchoice.lower() != "stand" and playervalue <= 21:
-            
-                playerchoice = str(input(f"'Hit', 'Stand', or 'Double down'?: "))
-
-                if playerchoice.lower() != "hit" and playerchoice.lower() != "stand" and playerchoice.lower() != "double down":
-                    clear_screen()
-                    print(f"\n{Fore.RED}That isn't a valid choice kid. It's either hit, stand, or double down.{Style.RESET_ALL}\n\n")
-                    time.sleep(1)
-                else:
-                    novalidchoice = False
-            
-
-                if playerchoice.lower() == "hit" or playerchoice.lower() == "double down":
-                    if playerchoice.lower() == "double down":
-                        if playerbet * 2 > playermoney:
-                            clear_screen()
-                            print(f"{Fore.RED}You tryna cheat me? You don't have that much money!{Style.RESET_ALL}")
-                            time.sleep(3)
-                        else:
-                            playerbet = playerbet * 2
-                            novalidchoice = False
-                    playerhand4 = draw_card()
-                    playervalue = playervalue + playerhand4
-                    clear_screen()
-                    print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}, {playerhand3}, {playerhand4}{Style.RESET_ALL}. Total value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ???{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealerhandshown}{Style.RESET_ALL}\n\n")
+        if continue_flag is True and playervalue <= 20:
+            continue_flag, playerhand4 = choice()
+            if playerhand4:
+                playervalue = calculate_hand_value(playerhand1, playerhand2, playerhand3, playerhand4)
+                clear_screen()
+                print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}, {playerhand3}, {playerhand4}{Style.RESET_ALL}. Total value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ???{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealerknownvalue}{Style.RESET_ALL}")
+                input("\n\nPress ENTER to continue.")
     
 
-                
-            else:
-                novalidchoice = False
 
-            
-
-
-    time.sleep(2)
     dealer_card_loop(reveal)
     clear_screen()
     print(f"It's a {Fore.BLUE}{dealerhandhidden}{Style.RESET_ALL}! Their total value is {Fore.BLUE}{dealervalue}{Style.RESET_ALL}.")
-    time.sleep(3)
+    input("\n\nPress ENTER to continue.")
 
     if dealervalue <= 16:
         dealerhand3 = draw_card()
-        dealervalue = dealervalue + dealerhand3
+        dealervalue = calculate_hand_value(dealerhandshown, dealerhandhidden, dealerhand3, dealerhand4)
 
         dealer_card_loop(draw)
         clear_screen()
         print(f"It's a {Fore.BLUE}{dealerhand3}{Style.RESET_ALL}! Their total value is {Fore.BLUE}{dealervalue}{Style.RESET_ALL}.")
-        time.sleep(3)
+        input("\n\nPress ENTER to continue.")
 
     if dealervalue <= 16:
         dealerhand4 = draw_card()
-        dealervalue = dealervalue + dealerhand4
+        dealervalue = calculate_hand_value(dealerhandshown, dealerhandhidden, dealerhand3, dealerhand4)
 
         dealer_card_loop(draw)
         clear_screen()
         print(f"It's a {Fore.BLUE}{dealerhand4}{Style.RESET_ALL}! Their total value is {Fore.BLUE}{dealervalue}{Style.RESET_ALL}.")
-        time.sleep(3)
+        input("\n\nPress ENTER to continue.")
 
 
-    time.sleep(1)
 
     clear_screen()
 
     if dealervalue >= playervalue and dealervalue <= 21:
         playermoney -= playerbet
         print(f"{Fore.RED}Dealer has a higher value! You lose ${playerbet}. Your balance: ${playermoney}{Style.RESET_ALL}\n\n")
-    
+        input("\n\nPress ENTER to continue.")
+
     elif playervalue >= dealervalue and playervalue <= 21:
-        playermoney += playerbet
-        print(f"{Fore.GREEN}You have a higher value! You win ${playerbet}. Your balance: ${playermoney}{Style.RESET_ALL}\n\n")
-    
+        playerwinnings = playerbet * 2
+        playermoney += playerwinnings
+        print(f"{Fore.GREEN}You have a higher value! You win ${playerwinnings}. Your balance: ${playermoney}{Style.RESET_ALL}\n\n")
+        input("\n\nPress ENTER to continue.")
+
     elif dealervalue > 21 and playervalue <= 21:
-        playermoney += playerbet
-        print(f"{Fore.GREEN}Dealer busts! You win ${playerbet}. Your balance: ${playermoney}{Style.RESET_ALL}\n\n")
-    
+        playerwinnings = playerbet * 2
+        playermoney += playerwinnings
+        print(f"{Fore.GREEN}Dealer busts! You win ${playerwinnings}. Your balance: ${playermoney}{Style.RESET_ALL}\n\n")
+        input("\n\nPress ENTER to continue.")
+
     elif playervalue > 21 and dealervalue <= 21:
         playermoney -= playerbet
         print(f"{Fore.RED}You bust! You lose ${playerbet}. Your balance: ${playermoney}{Style.RESET_ALL}\n\n")
-    
+        input("\n\nPress ENTER to continue.")
+
     elif playervalue == dealervalue or playervalue > 21 and dealervalue > 21:
         print(f"{Fore.YELLOW}It's a push! You get your bet of ${playerbet} back. Your balance: ${playermoney}{Style.RESET_ALL}\n\n")
-    
+        input("\n\nPress ENTER to continue.")
+
     else:
         print(f"I uh... I don't know what this is. If you could do me a favor and take a screenshot of this and file a bug report, I'd appreciate it.\n\nPlayer value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\nDealer value: {Fore.BLUE}{dealervalue}{Style.RESET_ALL}")
+        input("\n\nPress ENTER to continue.")
 
     set_window_title(f"Blackjack Casino - Balance: ${playermoney}")
 
-    time.sleep(5)
 
 
 
