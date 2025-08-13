@@ -5,6 +5,8 @@ import os
 import random
 import time
 import colorama
+import pygame
+import traceback
 from colorama import Fore, Style, Back
 
 colorama.init()
@@ -13,7 +15,7 @@ def set_window_title(title):
     if os.name == "nt":  # Windows
         os.system(f"title {title}")
     else:  # macOS/Linux
-        sys.stdout.write(f"\33]0;{title}\a")
+        sys.stdout.write(f"\33]0;{title}")
         sys.stdout.flush()
 
 set_window_title("Blackjack Casino - Balance: $1000")
@@ -43,6 +45,47 @@ def install_missing_requirements():
         print("All requirements are satisfied.")
 
 install_missing_requirements()
+
+# Sound logic
+try:
+    pygame.mixer.init()
+
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+    def load_sound(filename):
+        path = os.path.join(BASE_DIR, filename)
+        if not os.path.exists(path):
+            input(f"[Warning] Sound file '{filename}' not found in project folder.")
+            return None
+        return pygame.mixer.Sound(path)
+
+    def load_music(filename):
+        path = os.path.join(BASE_DIR, filename)
+        if not os.path.exists(path):
+            input(f"[Warning] music file '{filename}' not found in project folder.")
+            return False
+        pygame.mixer.music.load(path)
+        return True
+    
+
+    fail_sound = load_sound("fail_sound.wav")
+    ding_sound = load_sound("ding.wav")
+    swoosh_sound = load_sound("swoosh.wav")
+    game_over_sound = load_sound("game_over.wav")
+    reward_sound = load_sound("reward.wav")
+    if load_music("background_music.wav"):
+        pygame.mixer.music.play(loops=-1)
+
+    def play_sound(sound):
+        if sound is not None:
+            sound.play()
+
+    
+except Exception:
+    traceback.print_exc()
+    input()
+
+
 
 
 
@@ -111,6 +154,7 @@ def rules():
 
 def blackjack():
 
+
     global playermoney
 
     playervalue = 0
@@ -121,20 +165,23 @@ def blackjack():
     while novalidint is True:
         try:
             clear_screen()
-            playerbet = int(input(f"{Style.RESET_ALL}How much would you like to bet for this round?: $"))
-
+            playerbet = int(input(f"{Style.RESET_ALL}How much would you like to bet for this round? (Your balance: ${playermoney})\n\n$"))
+            
             if playerbet > playermoney:
                 clear_screen()
+                play_sound(fail_sound)
                 print(f"{Fore.RED}You tryna cheat me? You don't have that much money!{Style.RESET_ALL}")
                 input("\n\nPress ENTER to continue.")
             elif playerbet < 50:
                 clear_screen()
+                play_sound(fail_sound)
                 print(f"{Fore.RED}You think this is a cheapskate casino? You need to bet at least $50.{Style.RESET_ALL}")
                 input("\n\nPress ENTER to continue.")
             else:
                 novalidint = False
         except ValueError:
             clear_screen()
+            play_sound(fail_sound)
             print(f"{Fore.RED}That isn't a number. I need a valid number.{Style.RESET_ALL}")
             input("\n\nPress ENTER to continue.")
 
@@ -142,12 +189,16 @@ def blackjack():
 
         if choice.lower() not in ["hit", "stand", "double down"]:
             clear_screen()
+            play_sound(fail_sound)
             print(f"{Fore.RED}That's not a valid choice.{Style.RESET_ALL}")
             input("\n\nPress ENTER to continue.")
             return False
         else:
             if choice.lower() == "double down" and playerbet * 2 > playermoney:
+                clear_screen()
+                play_sound(fail_sound)
                 print(f"{Fore.RED}You don't have enough money for that. Try hitting instead.{Style.RESET_ALL}")
+                input("\n\nPress ENTER to continue.")
                 return False
             else:
                 return True
@@ -216,8 +267,11 @@ def blackjack():
         elif type == "reshuffle":
             text = "is reshuffling the cards"
             duration = 10
+
+        
         for i in range(1, duration):
 
+            play_sound(swoosh_sound)
             clear_screen()
             print(f"{Style.DIM}The dealer {text}.{Style.RESET_ALL}")
             time.sleep(0.3)
@@ -236,6 +290,7 @@ def blackjack():
         dealerknownvalue = 10
     else:
         dealerknownvalue = dealerhandshown
+    play_sound(ding_sound)
     print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}{Style.RESET_ALL}. Total value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ???{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealerknownvalue}{Style.RESET_ALL}")
 
     input("\n\nPress ENTER to continue.")
@@ -272,6 +327,7 @@ def blackjack():
         if playerhand3:
             playervalue = calculate_hand_value(playerhand1, playerhand2, playerhand3, playerhand4)
             clear_screen()
+            play_sound(ding_sound)
             print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}, {playerhand3}{Style.RESET_ALL}. Total value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ???{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealerknownvalue}{Style.RESET_ALL}")
             input("\n\nPress ENTER to continue.")
 
@@ -282,6 +338,7 @@ def blackjack():
             if playerhand4:
                 playervalue = calculate_hand_value(playerhand1, playerhand2, playerhand3, playerhand4)
                 clear_screen()
+                play_sound(ding_sound)
                 print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}, {playerhand3}, {playerhand4}{Style.RESET_ALL}. Total value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ???{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealerknownvalue}{Style.RESET_ALL}")
                 input("\n\nPress ENTER to continue.")
     
@@ -289,6 +346,7 @@ def blackjack():
 
     dealer_card_loop(reveal)
     clear_screen()
+    play_sound(ding_sound)
     print(f"It's a {Fore.BLUE}{dealerhandhidden}{Style.RESET_ALL}! Their total value is {Fore.BLUE}{dealervalue}{Style.RESET_ALL}.")
     input("\n\nPress ENTER to continue.")
 
@@ -298,6 +356,7 @@ def blackjack():
 
         dealer_card_loop(draw)
         clear_screen()
+        play_sound(ding_sound)
         print(f"It's a {Fore.BLUE}{dealerhand3}{Style.RESET_ALL}! Their total value is {Fore.BLUE}{dealervalue}{Style.RESET_ALL}.")
         input("\n\nPress ENTER to continue.")
 
@@ -307,6 +366,7 @@ def blackjack():
 
         dealer_card_loop(draw)
         clear_screen()
+        play_sound(ding_sound)
         print(f"It's a {Fore.BLUE}{dealerhand4}{Style.RESET_ALL}! Their total value is {Fore.BLUE}{dealervalue}{Style.RESET_ALL}.")
         input("\n\nPress ENTER to continue.")
 
@@ -316,39 +376,45 @@ def blackjack():
 
     if dealervalue >= playervalue and dealervalue <= 21:
         playermoney -= playerbet
+        play_sound(game_over_sound)
         print(f"{Fore.RED}Dealer has a higher value! You lose ${playerbet}. Your balance: ${playermoney}{Style.RESET_ALL}\n\n")
         input("\n\nPress ENTER to continue.")
 
     elif playervalue >= dealervalue and playervalue <= 21:
         playerwinnings = playerbet * 2
         playermoney += playerwinnings
+        play_sound(reward_sound)
         print(f"{Fore.GREEN}You have a higher value! You win ${playerwinnings}. Your balance: ${playermoney}{Style.RESET_ALL}\n\n")
         input("\n\nPress ENTER to continue.")
 
     elif dealervalue > 21 and playervalue <= 21:
         playerwinnings = playerbet * 2
         playermoney += playerwinnings
+        play_sound(reward_sound)
         print(f"{Fore.GREEN}Dealer busts! You win ${playerwinnings}. Your balance: ${playermoney}{Style.RESET_ALL}\n\n")
         input("\n\nPress ENTER to continue.")
 
     elif playervalue > 21 and dealervalue <= 21:
         playermoney -= playerbet
+        play_sound(game_over_sound)
         print(f"{Fore.RED}You bust! You lose ${playerbet}. Your balance: ${playermoney}{Style.RESET_ALL}\n\n")
         input("\n\nPress ENTER to continue.")
 
     elif playervalue == dealervalue or playervalue > 21 and dealervalue > 21:
+        play_sound(ding_sound)
         print(f"{Fore.YELLOW}It's a push! You get your bet of ${playerbet} back. Your balance: ${playermoney}{Style.RESET_ALL}\n\n")
         input("\n\nPress ENTER to continue.")
 
     else:
+        play_sound(fail_sound)
         print(f"I uh... I don't know what this is. If you could do me a favor and take a screenshot of this and file a bug report, I'd appreciate it.\n\nPlayer value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\nDealer value: {Fore.BLUE}{dealervalue}{Style.RESET_ALL}")
         input("\n\nPress ENTER to continue.")
 
+    
+
+
+
     set_window_title(f"Blackjack Casino - Balance: ${playermoney}")
-
-
-
-
     if playermoney < 50:
         clear_screen()
         game_over_banner()
@@ -371,5 +437,8 @@ print(f"Alright then, let's get started with your first round. You've got ${play
 input("\n\nPress ENTER to begin.")
 
 while player_has_money is True:
-
-    blackjack()
+    try:
+        blackjack()
+    except Exception as e:
+        traceback.print_exc()
+        input()
