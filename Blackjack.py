@@ -11,15 +11,6 @@ from colorama import Fore, Style, Back
 
 colorama.init()
 
-def set_window_title(title):
-    if os.name == "nt":  # Windows
-        os.system(f"title {title}")
-    else:  # macOS/Linux
-        sys.stdout.write(f"\33]0;{title}")
-        sys.stdout.flush()
-
-set_window_title("Blackjack Casino - Balance: $1000")
-
 REQUIREMENTS_FILE = "Requirements.txt"
 
 def install_missing_requirements():
@@ -46,11 +37,12 @@ def install_missing_requirements():
 
 install_missing_requirements()
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # Sound logic
 try:
     pygame.mixer.init()
 
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
     def load_sound(filename):
         path = os.path.join(BASE_DIR, filename)
@@ -87,10 +79,57 @@ except Exception:
 
 
 
-
-
+# Save data default values. These are here in case the player has never played before.
 playermoney = 1000
 player_has_money = True
+achievement_the_house = False
+
+def load_file(filename="savedata.txt"):
+    data = {}
+    path = os.path.join(BASE_DIR, filename)
+
+    # If save file doesn't exist, create it with default values
+    if not os.path.exists(path):
+        default_data = {
+            "playermoney": 1000,
+            "achievement_the_house": False
+        }
+        with open(path, "w") as file:
+            for key, value in default_data.items():
+                file.write(f"{key}={value}\n")
+        return default_data  # return the defaults immediately
+
+    # If file exists, read its values
+    with open(path, "r") as file:
+        for line in file:
+            if "=" in line:
+                key, value = line.strip().split("=", 1)
+                # Convert certain known keys to the right type
+                if key == "playermoney":
+                    value = int(value)
+                elif key in ("achievement_the_house"):
+                    value = value.lower() == "true"
+                data[key] = value
+
+    return data
+
+def save_file(data, filename="savedata.txt"):
+    path = os.path.join(BASE_DIR, filename)
+    with open(path, "w") as file:
+        for key, value in data.items():
+            file.write(f"{key}={value}\n")
+
+
+save_data = load_file()
+
+if "playermoney" not in save_data:
+    save_data["playermoney"] = 1000
+
+if "achievement_the_house" not in save_data:
+    save_data["achievement_the_house"] = False
+
+playermoney = int(save_data.get("playermoney", 1000))
+achievement_the_house = bool(save_data.get("achievement_the_house", False))
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -138,16 +177,20 @@ def draw_card():
 def rules():
 
     clear_screen()
+    play_sound(ding_sound)
     print(f"The goal of Blackjack is to get as close to a total value of {Fore.BLUE}21{Style.RESET_ALL} as possible without going over. For example, a value of {Fore.BLUE}20{Style.RESET_ALL} is good, a value of {Fore.BLUE}25{Style.RESET_ALL} is bad.")
     input("\n\nPress ENTER to continue.")
     clear_screen()
+    play_sound(ding_sound)
     print(f"There are {Fore.BLUE}3{Style.RESET_ALL} different things you can do each turn. You can {Fore.YELLOW}Hit{Style.RESET_ALL}, {Fore.YELLOW}Stand{Style.RESET_ALL}, or {Fore.YELLOW}Double Down{Style.RESET_ALL}.")
     input("\n\nPress ENTER to continue.")
     clear_screen()
+    play_sound(ding_sound)
     print(f"If you choose to {Fore.YELLOW}Hit{Style.RESET_ALL}, you draw {Fore.BLUE}1{Style.RESET_ALL} card and end your turn.\n\n\nIf you choose to {Fore.YELLOW}Stand{Style.RESET_ALL}, you end your turn and draw no cards.\n\n\nIf you choose to {Fore.YELLOW}Double Down{Style.RESET_ALL}, you draw {Fore.BLUE}1{Style.RESET_ALL} card, double your bet, and {Style.BRIGHT}take no more actions for the rest of the game.{Style.RESET_ALL}")
     input("\n\nPress ENTER to continue.")
     clear_screen()
-    print(f"The dealer will attempt to beat you by reaching a higher value (while still not going over {Fore.BLUE}21{Style.RESET_ALL}.)\nIf the dealer has a value closer to 21 at the end of the game, you lose.")
+    play_sound(ding_sound)
+    print(f"The dealer will attempt to beat you by reaching a higher value (while still not going over {Fore.BLUE}21{Style.RESET_ALL}.)\nIf the dealer has a value closer to {Fore.BLUE}21{Style.RESET_ALL} at the end of the game, you lose.")
     input("\n\nPress ENTER to continue.")
 
 
@@ -165,6 +208,7 @@ def blackjack():
     while novalidint is True:
         try:
             clear_screen()
+            play_sound(ding_sound)
             playerbet = int(input(f"{Style.RESET_ALL}How much would you like to bet for this round? (Your balance: ${playermoney})\n\n$"))
             
             if playerbet > playermoney:
@@ -282,19 +326,6 @@ def blackjack():
             print(f"{Style.DIM}The dealer {text}...{Style.RESET_ALL}")
             time.sleep(0.3)
 
-
-    clear_screen()
-    if dealerhandshown == "A":
-        dealerknownvalue = 11
-    elif dealerhandshown in ["J", "Q", "K"]:
-        dealerknownvalue = 10
-    else:
-        dealerknownvalue = dealerhandshown
-    play_sound(ding_sound)
-    print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}{Style.RESET_ALL}. Total value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ???{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealerknownvalue}{Style.RESET_ALL}")
-
-    input("\n\nPress ENTER to continue.")
-
     # Choice logic
     def choice():
 
@@ -304,8 +335,8 @@ def blackjack():
 
         while validchoice is False:
 
-            clear_screen()
-            playerchoice = input(f"{Fore.YELLOW}Hit{Style.RESET_ALL}, {Fore.YELLOW}stand{Style.RESET_ALL}, or {Fore.YELLOW}double down{Style.RESET_ALL}?: ")
+            time.sleep(1)
+            playerchoice = input(f"\n\n{Fore.YELLOW}Hit{Style.RESET_ALL}, {Fore.YELLOW}stand{Style.RESET_ALL}, or {Fore.YELLOW}double down{Style.RESET_ALL}?: ")
             validchoice = validate_choice(playerchoice)
 
         if playerchoice.lower() == "hit":
@@ -319,21 +350,37 @@ def blackjack():
         else: # Standing
             return False, None
 
+    clear_screen()
+    if dealerhandshown == "A":
+        dealerknownvalue = 11
+    elif dealerhandshown in ["J", "Q", "K"]:
+        dealerknownvalue = 10
+    else:
+        dealerknownvalue = dealerhandshown
+    play_sound(ding_sound)
+    print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}{Style.RESET_ALL}. Total value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ???{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealerknownvalue}{Style.RESET_ALL}")
+
+    if playervalue == 21:
+        time.sleep(0.5)
+        play_sound(reward_sound)
+        playermoney += playerbet * 2
+        print(f"\n\n{Fore.GREEN}Instant Blackjack! You win ${playerbet * 2}. Your balance: ${playermoney}{Style.RESET_ALL}")
+        input("\n\nPress ENTER to continue.")
+        return
     # Choice round 1
 
-    if playervalue <= 20:
+    elif playervalue < 21:
 
         continue_flag, playerhand3 = choice()
         if playerhand3:
             playervalue = calculate_hand_value(playerhand1, playerhand2, playerhand3, playerhand4)
             clear_screen()
             play_sound(ding_sound)
-            print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}, {playerhand3}{Style.RESET_ALL}. Total value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ???{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealerknownvalue}{Style.RESET_ALL}")
-            input("\n\nPress ENTER to continue.")
+            print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}, {playerhand3}{Style.RESET_ALL}. Total value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ?{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealerknownvalue}{Style.RESET_ALL}")
 
         # Choice round 2, but only if the continue flag is True and playervalue is still under 21
 
-        if continue_flag is True and playervalue <= 20:
+        if continue_flag is True and playervalue < 21:
             continue_flag, playerhand4 = choice()
             if playerhand4:
                 playervalue = calculate_hand_value(playerhand1, playerhand2, playerhand3, playerhand4)
@@ -341,6 +388,11 @@ def blackjack():
                 play_sound(ding_sound)
                 print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}, {playerhand3}, {playerhand4}{Style.RESET_ALL}. Total value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ???{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealerknownvalue}{Style.RESET_ALL}")
                 input("\n\nPress ENTER to continue.")
+        elif playervalue > 21:
+            input("\n\nPress ENTER to continue.")
+
+    elif playervalue > 21:
+        input("\n\nPress ENTER to continue.")
     
 
 
@@ -374,21 +426,21 @@ def blackjack():
 
     clear_screen()
 
-    if dealervalue >= playervalue and dealervalue <= 21:
+    if dealervalue > playervalue and dealervalue <= 21:
         playermoney -= playerbet
         play_sound(game_over_sound)
         print(f"{Fore.RED}Dealer has a higher value! You lose ${playerbet}. Your balance: ${playermoney}{Style.RESET_ALL}\n\n")
         input("\n\nPress ENTER to continue.")
 
-    elif playervalue >= dealervalue and playervalue <= 21:
-        playerwinnings = playerbet * 2
+    elif playervalue > dealervalue and playervalue <= 21:
+        playerwinnings = playerbet
         playermoney += playerwinnings
         play_sound(reward_sound)
         print(f"{Fore.GREEN}You have a higher value! You win ${playerwinnings}. Your balance: ${playermoney}{Style.RESET_ALL}\n\n")
         input("\n\nPress ENTER to continue.")
 
     elif dealervalue > 21 and playervalue <= 21:
-        playerwinnings = playerbet * 2
+        playerwinnings = playerbet
         playermoney += playerwinnings
         play_sound(reward_sound)
         print(f"{Fore.GREEN}Dealer busts! You win ${playerwinnings}. Your balance: ${playermoney}{Style.RESET_ALL}\n\n")
@@ -410,11 +462,9 @@ def blackjack():
         print(f"I uh... I don't know what this is. If you could do me a favor and take a screenshot of this and file a bug report, I'd appreciate it.\n\nPlayer value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\nDealer value: {Fore.BLUE}{dealervalue}{Style.RESET_ALL}")
         input("\n\nPress ENTER to continue.")
 
-    
+    save_data["playermoney"] = playermoney
+    save_file(save_data)
 
-
-
-    set_window_title(f"Blackjack Casino - Balance: ${playermoney}")
     if playermoney < 50:
         clear_screen()
         game_over_banner()
@@ -433,12 +483,33 @@ if rules_decision.upper() == "RULES":
     rules()
 
 clear_screen()
-print(f"Alright then, let's get started with your first round. You've got ${playermoney} to start with, so don't sweat finding cash to bet with.\nIf you reach $0, the game will end, so don't make super risky bets!\n\nAlso, I recommend putting this window in fullscreen. It prevents the text from looking wacky.")
+play_sound(ding_sound)
+print(f"Alright then, let's get started with your first round. You've got ${playermoney} right now, so don't sweat finding cash to bet with.\nIf you reach $0, the game will end, so don't make super risky bets!\n(By the way, your cash will get reset to $1000 if you run out of money. Part of the new 'Gambling Subsidation Fund' program.\nHowever, it comes at a cost; you'll lose all your achievements, and have to earn them again.\n{Fore.CYAN}[Developer note: I'm gonna add a way to view achievements eventually. I just haven't gotten around to it.]{Style.RESET_ALL})\n\nAlso, I recommend putting this window in fullscreen. It prevents the text from looking wacky.")
 input("\n\nPress ENTER to begin.")
 
 while player_has_money is True:
+    if playermoney >= 100000 and achievement_the_house is False:
+        achievement_text = (
+        f"{Fore.RED}S{Fore.YELLOW}E{Fore.GREEN}C{Fore.CYAN}R{Fore.BLUE}E{Fore.MAGENTA}T "
+        f"{Fore.RED}A{Fore.YELLOW}C{Fore.GREEN}H{Fore.CYAN}I{Fore.BLUE}E{Fore.MAGENTA}V{Fore.RED}E{Fore.YELLOW}M{Fore.GREEN}E{Fore.CYAN}N{Fore.BLUE}T "
+        f"{Fore.MAGENTA}U{Fore.RED}N{Fore.YELLOW}L{Fore.GREEN}O{Fore.CYAN}C{Fore.BLUE}K{Fore.MAGENTA}E{Fore.RED}D{Style.RESET_ALL}:\n"
+        f"{Fore.RED}T{Fore.YELLOW}h{Fore.GREEN}e {Fore.CYAN}H{Fore.BLUE}o{Fore.MAGENTA}u{Fore.RED}s{Fore.YELLOW}e\n"
+        f"{Fore.GREEN}Earn {Fore.CYAN}$100{Fore.BLUE},{Fore.MAGENTA}000 {Fore.RED}from {Fore.YELLOW}The {Fore.GREEN}Casino{Style.RESET_ALL}"
+        )
+        print(achievement_text)
+        achievement_the_house = True
+        input("\n\nPress ENTER to continue.")
     try:
         blackjack()
+        save_data["playermoney"] = playermoney
+        save_data["achievement_the_house"] = achievement_the_house
+        save_file(save_data)
     except Exception as e:
         traceback.print_exc()
         input()
+
+if player_has_money is False:
+    # Reset the player's money when the game is over if they went bankrupt.
+    save_data["playermoney"] = 1000
+    save_data["achievement_the_house"] = False
+    save_file(save_data)
