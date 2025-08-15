@@ -11,33 +11,15 @@ from colorama import Fore, Style, Back
 
 colorama.init()
 
-REQUIREMENTS_FILE = "Requirements.txt"
+def resource_path(relative_path):
+    try:
+        # PyInstaller runtime path
+        base_path = sys._MEIPASS
+    except AttributeError:
+        # Running normally
+        base_path = os.path.abspath(".")
 
-def install_missing_requirements():
-    # Read requirements from file
-    if not os.path.exists(REQUIREMENTS_FILE):
-        print(f"Requirements file '{REQUIREMENTS_FILE}' not found.")
-        return
-    
-    with open(REQUIREMENTS_FILE) as f:
-        required = f.read().splitlines()
-
-    installed = {pkg.key for pkg in pkg_resources.working_set}
-    missing = [pkg for pkg in required if pkg.lower() not in installed]
-
-    if missing:
-        print("Installing missing requirements...")
-        subprocess.check_call(
-            [sys.executable, "-m", "pip", "install", *missing],
-            stdout=subprocess.DEVNULL,  # Suppress output
-            stderr=subprocess.DEVNULL   # Suppress errors in console (pip still fails if it can't install)
-        )
-    else:
-        print("All requirements are satisfied.")
-
-install_missing_requirements()
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base_path, relative_path)
 
 # Sound logic
 try:
@@ -45,16 +27,16 @@ try:
 
 
     def load_sound(filename):
-        path = os.path.join(BASE_DIR, filename)
+        path = resource_path(filename)
         if not os.path.exists(path):
-            input(f"[Warning] Sound file '{filename}' not found in project folder.")
+            input(f"[Warning] Sound file '{filename}' not found in program folder.")
             return None
         return pygame.mixer.Sound(path)
 
     def load_music(filename):
-        path = os.path.join(BASE_DIR, filename)
+        path = resource_path(filename)
         if not os.path.exists(path):
-            input(f"[Warning] music file '{filename}' not found in project folder.")
+            input(f"[Warning] music file '{filename}' not found in program folder.")
             return False
         pygame.mixer.music.load(path)
         return True
@@ -86,7 +68,7 @@ achievement_the_house = False
 
 def load_file(filename="savedata.txt"):
     data = {}
-    path = os.path.join(BASE_DIR, filename)
+    path = resource_path(filename)
 
     # If save file doesn't exist, create it with default values
     if not os.path.exists(path):
@@ -114,7 +96,7 @@ def load_file(filename="savedata.txt"):
     return data
 
 def save_file(data, filename="savedata.txt"):
-    path = os.path.join(BASE_DIR, filename)
+    path = resource_path(filename)
     with open(path, "w") as file:
         for key, value in data.items():
             file.write(f"{key}={value}\n")
