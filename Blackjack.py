@@ -266,7 +266,11 @@ def blackjack():
             hand_value -= 10
             aces -= 1
 
-        return hand_value
+        if aces > 0:
+            soft = "Soft "
+        else:
+            soft = ""
+        return soft, hand_value
         
 
     
@@ -279,13 +283,13 @@ def blackjack():
     playerhand2 = draw_card()
     playerhand3 = None
     playerhand4 = None
-    playervalue = calculate_hand_value(playerhand1, playerhand2, playerhand3, playerhand4)
+    player_soft, playervalue = calculate_hand_value(playerhand1, playerhand2, playerhand3, playerhand4)
 
     dealerhandshown = draw_card()
     dealerhandhidden = draw_card()
     dealerhand3 = None
     dealerhand4 = None
-    dealervalue = calculate_hand_value(dealerhandshown, dealerhandhidden, dealerhand3, dealerhand4)
+    dealer_soft, dealervalue = calculate_hand_value(dealerhandshown, dealerhandhidden, dealerhand3, dealerhand4)
 
     draw = "draw"
     reveal = "reveal"
@@ -348,7 +352,7 @@ def blackjack():
     else:
         dealerknownvalue = dealerhandshown
     play_sound(ding_sound)
-    print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}{Style.RESET_ALL}. Total value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ?{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealerknownvalue}{Style.RESET_ALL}")
+    print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}{Style.RESET_ALL}. Total value: {Fore.BLUE}{player_soft}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ?{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealerknownvalue}{Style.RESET_ALL}")
 
     if playervalue == 21:
         time.sleep(0.5)
@@ -365,20 +369,20 @@ def blackjack():
 
         continue_flag, playerhand3 = choice()
         if playerhand3:
-            playervalue = calculate_hand_value(playerhand1, playerhand2, playerhand3, playerhand4)
+            player_soft, playervalue = calculate_hand_value(playerhand1, playerhand2, playerhand3, playerhand4)
             clear_screen()
             play_sound(ding_sound)
-            print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}, {playerhand3}{Style.RESET_ALL}. Total value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ?{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealerknownvalue}{Style.RESET_ALL}")
+            print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}, {playerhand3}{Style.RESET_ALL}. Total value: {Fore.BLUE}{player_soft}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ?{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealer_soft}{dealerknownvalue}{Style.RESET_ALL}")
 
         # Choice round 2, but only if the continue flag is True and playervalue is still under 21
 
         if continue_flag is True and playervalue < 21:
             continue_flag, playerhand4 = choice()
             if playerhand4:
-                playervalue = calculate_hand_value(playerhand1, playerhand2, playerhand3, playerhand4)
+                player_soft, playervalue = calculate_hand_value(playerhand1, playerhand2, playerhand3, playerhand4)
                 clear_screen()
                 play_sound(ding_sound)
-                print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}, {playerhand3}, {playerhand4}{Style.RESET_ALL}. Total value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ?{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealerknownvalue}{Style.RESET_ALL}")
+                print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}, {playerhand3}, {playerhand4}{Style.RESET_ALL}. Total value: {Fore.BLUE}{player_soft}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ?{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealer_soft}{dealerknownvalue}{Style.RESET_ALL}")
                 input("\n\nPress ENTER to continue.")
         elif playervalue > 21:
             input("\n\nPress ENTER to continue.")
@@ -391,27 +395,27 @@ def blackjack():
     dealer_card_loop(reveal)
     clear_screen()
     play_sound(ding_sound)
-    print(f"It's a {Fore.BLUE}{dealerhandhidden}{Style.RESET_ALL}! Their total value is {Fore.BLUE}{dealervalue}{Style.RESET_ALL}.")
+    print(f"It's a {Fore.BLUE}{dealerhandhidden}{Style.RESET_ALL}! Their total value is {Fore.BLUE}{dealer_soft}{dealervalue}{Style.RESET_ALL}.")
     input("\n\nPress ENTER to continue.")
 
     if dealervalue <= 16:
         dealerhand3 = draw_card()
-        dealervalue = calculate_hand_value(dealerhandshown, dealerhandhidden, dealerhand3, dealerhand4)
+        dealer_soft, dealervalue = calculate_hand_value(dealerhandshown, dealerhandhidden, dealerhand3, dealerhand4)
 
         dealer_card_loop(draw)
         clear_screen()
         play_sound(ding_sound)
-        print(f"It's a {Fore.BLUE}{dealerhand3}{Style.RESET_ALL}! Their total value is {Fore.BLUE}{dealervalue}{Style.RESET_ALL}.")
+        print(f"It's a {Fore.BLUE}{dealerhand3}{Style.RESET_ALL}! Their total value is {Fore.BLUE}{dealer_soft}{dealervalue}{Style.RESET_ALL}.")
         input("\n\nPress ENTER to continue.")
 
     if dealervalue <= 16:
         dealerhand4 = draw_card()
-        dealervalue = calculate_hand_value(dealerhandshown, dealerhandhidden, dealerhand3, dealerhand4)
+        dealer_soft, dealervalue = calculate_hand_value(dealerhandshown, dealerhandhidden, dealerhand3, dealerhand4)
 
         dealer_card_loop(draw)
         clear_screen()
         play_sound(ding_sound)
-        print(f"It's a {Fore.BLUE}{dealerhand4}{Style.RESET_ALL}! Their total value is {Fore.BLUE}{dealervalue}{Style.RESET_ALL}.")
+        print(f"It's a {Fore.BLUE}{dealerhand4}{Style.RESET_ALL}! Their total value is {Fore.BLUE}{dealer_soft}{dealervalue}{Style.RESET_ALL}.")
         input("\n\nPress ENTER to continue.")
 
 
