@@ -340,7 +340,7 @@ def blackjack():
     else:
         dealerknownvalue = dealerhandshown
     play_sound(ding_sound)
-    print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}{Style.RESET_ALL}. Total value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ???{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealerknownvalue}{Style.RESET_ALL}")
+    print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}{Style.RESET_ALL}. Total value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ?{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealerknownvalue}{Style.RESET_ALL}")
 
     if playervalue == 21:
         time.sleep(0.5)
@@ -348,6 +348,8 @@ def blackjack():
         playermoney += playerbet * 2
         print(f"\n\n{Fore.GREEN}Instant Blackjack! You win ${playerbet * 2}. Your balance: ${playermoney}{Style.RESET_ALL}")
         input("\n\nPress ENTER to continue.")
+        save_data["playermoney"] = playermoney
+        save_file(save_data)
         return
     # Choice round 1
 
@@ -368,7 +370,7 @@ def blackjack():
                 playervalue = calculate_hand_value(playerhand1, playerhand2, playerhand3, playerhand4)
                 clear_screen()
                 play_sound(ding_sound)
-                print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}, {playerhand3}, {playerhand4}{Style.RESET_ALL}. Total value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ???{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealerknownvalue}{Style.RESET_ALL}")
+                print(f"Your hand: {Fore.BLUE}{playerhand1}, {playerhand2}, {playerhand3}, {playerhand4}{Style.RESET_ALL}. Total value: {Fore.BLUE}{playervalue}{Style.RESET_ALL}\n\nDealer's hand: {Fore.BLUE}{dealerhandshown}, ?{Style.RESET_ALL}. Total known value: {Fore.BLUE}{dealerknownvalue}{Style.RESET_ALL}")
                 input("\n\nPress ENTER to continue.")
         elif playervalue > 21:
             input("\n\nPress ENTER to continue.")
