@@ -8,18 +8,17 @@ import colorama
 import pygame
 import traceback
 from colorama import Fore, Style, Back
+from pathlib import Path
 
 colorama.init()
 
-def resource_path(relative_path):
-    try:
-        # PyInstaller runtime path
-        base_path = sys._MEIPASS
-    except AttributeError:
-        # Running normally
-        base_path = os.path.abspath(".")
+import sys, os
 
-    return os.path.join(base_path, relative_path)
+def resource_path(relative_path):
+    if hasattr(sys, '_MEIPASS'):  # PyInstaller temp dir
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+
 
 # Sound logic
 try:
@@ -59,7 +58,18 @@ except Exception:
     traceback.print_exc()
     input()
 
+APP_NAME = "Blackjack"
 
+def get_user_save_path(filename="savedata.txt"):
+    home = Path.home()
+    if sys.platform.startswith("win"):
+        base = Path(os.getenv("APPDATA", home / "AppData/Roaming")) / APP_NAME
+    elif sys.platform == "darwin":
+        base = home / "Library" / "Application Support" / APP_NAME
+    else:  # Linux & others
+        base = Path(os.getenv("XDG_DATA_HOME", home / ".local" / "share")) / APP_NAME
+    base.mkdir(parents=True, exist_ok=True)
+    return base / filename
 
 # Save data default values. These are here in case the player has never played before.
 playermoney = 1000
@@ -68,38 +78,36 @@ achievement_the_house = False
 
 def load_file(filename="savedata.txt"):
     data = {}
-    path = resource_path(filename)
+    user_path = get_user_save_path(filename)
 
-    # If save file doesn't exist, create it with default values
-    if not os.path.exists(path):
+    # First-run: if user save doesn't exist, seed it with defaults (or copy a bundled template)
+    if not user_path.exists():
         default_data = {
             "playermoney": 1000,
             "achievement_the_house": False
         }
-        with open(path, "w") as file:
-            for key, value in default_data.items():
-                file.write(f"{key}={value}\n")
-        return default_data  # return the defaults immediately
+        with user_path.open("w", encoding="utf-8") as f:
+            for k, v in default_data.items():
+                f.write(f"{k}={v}\n")
+        return default_data
 
-    # If file exists, read its values
-    with open(path, "r") as file:
-        for line in file:
+    # Read existing save
+    with user_path.open("r", encoding="utf-8") as f:
+        for line in f:
             if "=" in line:
                 key, value = line.strip().split("=", 1)
-                # Convert certain known keys to the right type
                 if key == "playermoney":
                     value = int(value)
-                elif key in ("achievement_the_house"):
+                elif key == "achievement_the_house":
                     value = value.lower() == "true"
                 data[key] = value
-
     return data
 
 def save_file(data, filename="savedata.txt"):
-    path = resource_path(filename)
-    with open(path, "w") as file:
+    user_path = get_user_save_path(filename)
+    with user_path.open("w", encoding="utf-8") as f:
         for key, value in data.items():
-            file.write(f"{key}={value}\n")
+            f.write(f"{key}={value}\n")
 
 
 save_data = load_file()
